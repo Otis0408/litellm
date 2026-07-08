@@ -146,3 +146,12 @@ def test_exact_cache_key_still_includes_prompt():
         model="gpt-4o-mini", messages=[{"role": "user", "content": "b"}]
     )
     assert key_a != key_b
+
+
+def test_get_cache_key_with_none_cache_control():
+    cache = Cache(type=LiteLLMCacheType.LOCAL)
+    key = cache.get_cache_key(
+        model="gpt-4o-mini", messages=[{"role": "user", "content": "hi"}], cache=None
+    )
+    assert isinstance(key, str)
+    assert key
