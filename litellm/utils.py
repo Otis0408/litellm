@@ -2344,9 +2344,12 @@ def _supports_factory(model: str, custom_llm_provider: Optional[str], key: str) 
     Exception: If the given model is not found or there's an error in retrieval.
     """
     try:
-        model, custom_llm_provider, _, _ = litellm.get_llm_provider(
-            model=model, custom_llm_provider=custom_llm_provider
-        )
+        try:
+            model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+                model=model, custom_llm_provider=custom_llm_provider
+            )
+        except Exception:
+            pass
 
         model_info = _get_model_info_helper(model=model, custom_llm_provider=custom_llm_provider)
 
