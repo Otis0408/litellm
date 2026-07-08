@@ -6782,7 +6782,10 @@ def trim_messages(
 
         # Do nothing if current tokens under messages
         if current_tokens < max_tokens:
-            return messages + tool_messages
+            final_messages = messages + tool_messages
+            if return_response_tokens:
+                return final_messages, max_tokens - get_token_count(final_messages, model)
+            return final_messages
 
         #### Trimming messages if current_tokens > max_tokens
         print_verbose(

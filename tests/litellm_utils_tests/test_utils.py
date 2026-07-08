@@ -127,6 +127,16 @@ def test_multiple_messages_no_trimming():
     assert messages == trimmed_messages
 
 
+def test_trim_messages_return_response_tokens_tuple_when_under_budget():
+    messages = [{"role": "user", "content": "hello world"}]
+    result = trim_messages(messages, model="gpt-4", return_response_tokens=True)
+    assert isinstance(result, tuple)
+    trimmed, response_tokens = result
+    assert trimmed == messages
+    assert isinstance(response_tokens, int)
+    assert response_tokens > 0
+
+
 # test_multiple_messages_no_trimming()
 
 
