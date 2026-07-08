@@ -3085,3 +3085,31 @@ def test_bedrock_converse_messages_pt_document_rejects_url_source():
         _bedrock_converse_messages_pt(
             messages, "anthropic.claude-sonnet-4-6", "bedrock"
         )
+
+
+def test_map_system_message_pt_handles_none_and_list_content():
+    from litellm.litellm_core_utils.prompt_templates.factory import map_system_message_pt
+
+    # assistant tool-call turn with content=None must not crash; system text merged in
+    out = map_system_message_pt(
+        [
+            {"role": "system", "content": "sys"},
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [{"id": "1", "type": "function", "function": {"name": "f", "arguments": "{}"}}],
+            },
+        ]
+    )
+    assert out[0]["content"] == "sys"
+    assert out[0]["tool_calls"]
+
+    # list system content and list next content must not crash; system prepended as a text block
+    out2 = map_system_message_pt(
+        [
+            {"role": "system", "content": [{"type": "text", "text": "sys"}]},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+        ]
+    )
+    assert isinstance(out2[0]["content"], list)
+    assert out2[0]["content"][0]["text"] == "sys"
