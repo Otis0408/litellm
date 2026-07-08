@@ -1135,20 +1135,17 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
 
         return expanded_content
 
-    def _map_stop_sequences(self, stop: Optional[Union[str, List[str]]]) -> Optional[List[str]]:
+    def _map_stop_sequences(self, stop: Optional[Union[str, List[str]]], drop_params: bool) -> Optional[List[str]]:
+        should_drop = litellm.drop_params or drop_params
         new_stop: Optional[List[str]] = None
         if isinstance(stop, str):
-            if (
-                stop.isspace() and litellm.drop_params is True
-            ):  # anthropic doesn't allow whitespace characters as stop-sequences
+            if stop.isspace() and should_drop:
                 return new_stop
             new_stop = [stop]
         elif isinstance(stop, list):
             new_v = []
             for v in stop:
-                if (
-                    v.isspace() and litellm.drop_params is True
-                ):  # anthropic doesn't allow whitespace characters as stop-sequences
+                if v.isspace() and should_drop:
                     continue
                 new_v.append(v)
             if len(new_v) > 0:
@@ -1398,7 +1395,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
             elif param == "stream" and value is True:
                 optional_params["stream"] = value
             elif param == "stop" and (isinstance(value, str) or isinstance(value, list)):
-                _value = self._map_stop_sequences(value)
+                _value = self._map_stop_sequences(value, drop_params=drop_params)
                 if _value is not None:
                     optional_params["stop_sequences"] = _value
             elif param == "temperature" or param == "top_p":

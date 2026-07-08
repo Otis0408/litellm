@@ -5733,3 +5733,24 @@ def test_top_k_forwarded_at_transform_on_models_that_accept_it():
     )
 
     assert result["top_k"] == 40
+
+
+def test_map_stop_sequences_honors_per_call_drop_params(monkeypatch):
+    monkeypatch.setattr(litellm, "drop_params", False)
+    config = AnthropicConfig()
+
+    optional_params = config.map_openai_params(
+        non_default_params={"stop": " "},
+        optional_params={},
+        model="claude-3-5-sonnet",
+        drop_params=True,
+    )
+    assert "stop_sequences" not in optional_params
+
+    optional_params = config.map_openai_params(
+        non_default_params={"stop": ["\n", " ", "x"]},
+        optional_params={},
+        model="claude-3-5-sonnet",
+        drop_params=True,
+    )
+    assert optional_params["stop_sequences"] == ["x"]
