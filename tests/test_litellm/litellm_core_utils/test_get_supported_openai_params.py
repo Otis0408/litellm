@@ -167,6 +167,22 @@ def test_bedrock_converse_alias_resolves_like_bedrock():
     assert "tools" in via_alias
 
 
+def test_openai_whisper_transcription_returns_supported_params():
+    """whisper-1 resolves to OpenAIWhisperAudioTranscriptionConfig, not the GPT-audio config.
+    The transcription branch used to raise ValueError for any non-GPT-audio config, crashing
+    for the canonical OpenAI transcription model even though the Whisper config exposes a valid
+    supported-params list. openai is a mapped provider, so the call must return that list."""
+    params = get_supported_openai_params(
+        model="whisper-1",
+        custom_llm_provider="openai",
+        request_type="transcription",
+    )
+
+    assert params is not None
+    assert "language" in params
+    assert "timestamp_granularities" in params
+
+
 def test_bedrock_converse_alias_keeps_nova_web_search_options():
     """Nova on the ``bedrock_converse`` alias still advertises web_search_options, proving the
     alias routes through the model-aware config rather than a blanket Bedrock default."""

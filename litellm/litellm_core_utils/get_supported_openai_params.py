@@ -117,10 +117,7 @@ def get_supported_openai_params(
             transcription_provider_config = litellm.ProviderConfigManager.get_provider_audio_transcription_config(
                 model=model, provider=LlmProviders.OPENAI
             )
-            if isinstance(transcription_provider_config, litellm.OpenAIGPTAudioTranscriptionConfig):
-                return transcription_provider_config.get_supported_openai_params(model=model)
-            else:
-                raise ValueError(f"Unsupported provider config: {transcription_provider_config} for model: {model}")
+            return transcription_provider_config.get_supported_openai_params(model=model)
         return litellm.OpenAIConfig().get_supported_openai_params(model=model)
     elif custom_llm_provider == "sap":
         if request_type == "chat_completion":
