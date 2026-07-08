@@ -1058,12 +1058,13 @@ class CustomStreamWrapper:
                 and chunk.choices[0].delta is not None
                 and (chunk.choices[0].delta.content or chunk.choices[0].delta.tool_calls)
             )
+            _has_usage = getattr(chunk, "usage", None) is not None
             if self.received_finish_reason is not None:
-                if not _has_content:
+                if not _has_content and not _has_usage:
                     raise StopIteration
             if chunk.choices and chunk.choices[0].finish_reason:
                 self.received_finish_reason = chunk.choices[0].finish_reason
-                if not _has_content:
+                if not _has_content and not _has_usage:
                     return _ProviderChunkEarlyReturn(None)
                 # Strip finish_reason from the content chunk so it appears
                 # only on the trailing empty-delta chunk (OpenAI spec).

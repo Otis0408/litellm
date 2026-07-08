@@ -10,10 +10,13 @@ import time
 from typing import List, Optional
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 import litellm
 from litellm.litellm_core_utils.streaming_handler import (
     CustomStreamWrapper,
     _GCHUNK_FIELDS,
+    calculate_total_usage,
     generic_chunk_has_all_required_fields,
 )
 from litellm.types.utils import (
@@ -484,6 +487,46 @@ def test_sync_streaming_overhead_not_regressed():
         f"Sync streaming of {n_chunks} chunks took {elapsed:.3f}s — "
         "per-chunk overhead regression detected"
     )
+
+
+@pytest.mark.parametrize("usage_after_finish", [False, True])
+def test_registered_custom_provider_keeps_usage_only_final_chunk(usage_after_finish):
+    """A usage-bearing ModelResponseStream final chunk from a registered custom provider
+    must not be dropped, so usage aggregation and _hidden_params surface real token counts.
+
+    Covers both orderings: usage riding on the finish_reason chunk, and a usage chunk that
+    arrives after the finish_reason chunk (OpenAI include_usage layout).
+    """
+    provider = "myfakeprovider_usagefinish"
+    litellm._custom_providers.append(provider)
+    try:
+        usage = Usage(prompt_tokens=42, completion_tokens=7, total_tokens=49)
+        if usage_after_finish:
+            chunks = [
+                _make_bedrock_converse_chunk("Hello"),
+                _make_bedrock_converse_chunk(" world"),
+                _make_bedrock_converse_chunk("", finish_reason="stop"),
+                _make_bedrock_converse_chunk("", usage=usage),
+            ]
+        else:
+            chunks = [
+                _make_bedrock_converse_chunk("Hello"),
+                _make_bedrock_converse_chunk(" world"),
+                _make_bedrock_converse_chunk("", finish_reason="stop", usage=usage),
+            ]
+        wrapper = _make_wrapper(chunks, provider=provider)
+        results = _drain_sync(wrapper)
+
+        total = calculate_total_usage(chunks=wrapper.chunks)
+        assert total.prompt_tokens == 42
+        assert total.completion_tokens == 7
+
+        final_usage = results[-1]._hidden_params.get("usage")
+        assert final_usage is not None
+        assert final_usage.prompt_tokens == 42
+        assert final_usage.completion_tokens == 7
+    finally:
+        litellm._custom_providers.remove(provider)
 
 
 def test_async_streaming_overhead_not_regressed():
