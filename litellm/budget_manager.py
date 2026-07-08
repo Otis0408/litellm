@@ -174,6 +174,7 @@ class BudgetManager:
         """
         self.user_dict[user]["current_cost"] = 0
         self.user_dict[user]["model_cost"] = {}
+        self._save_data_thread()
         return {"user": self.user_dict[user]}
 
     def reset_on_duration(self, user: str):
