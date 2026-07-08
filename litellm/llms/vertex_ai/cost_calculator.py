@@ -91,7 +91,7 @@ def cost_per_character(
     else:
         try:
             if (
-                _is_above_128k(tokens=prompt_characters * 4)  # 1 token = 4 char
+                _is_above_128k(tokens=prompt_characters / 4)  # 1 token = 4 char
                 and model not in models_without_dynamic_pricing
             ):
                 ## check if character pricing, else default to token pricing
@@ -134,7 +134,7 @@ def cost_per_character(
         completion_tokens = usage.completion_tokens
         try:
             if (
-                _is_above_128k(tokens=completion_characters * 4)  # 1 token = 4 char
+                _is_above_128k(tokens=completion_characters / 4)  # 1 token = 4 char
                 and model not in models_without_dynamic_pricing
             ):
                 assert (
