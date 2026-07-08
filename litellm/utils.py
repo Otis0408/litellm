@@ -5006,6 +5006,10 @@ def _check_provider_match(model_info: dict, custom_llm_provider: Optional[str]) 
             return True
         elif custom_llm_provider.startswith("bedrock") and model_info["litellm_provider"].startswith("bedrock"):
             return True
+        elif custom_llm_provider.startswith("ai21") and model_info["litellm_provider"].startswith("ai21"):
+            return True
+        elif custom_llm_provider.startswith("azure") and model_info["litellm_provider"].startswith("azure"):
+            return True
         elif (
             custom_llm_provider == "litellm_proxy"
         ):  # litellm_proxy is a special case, it's not a provider, it's a proxy for the provider
