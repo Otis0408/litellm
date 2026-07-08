@@ -310,13 +310,14 @@ def get_secret(
                         return secret
             except Exception:
                 return secret
+            return secret if secret is not None else default_value
         else:
             secret = os.environ.get(secret_name)
             secret_value_as_bool = str_to_bool(secret) if secret is not None else None
             if secret_value_as_bool is not None and isinstance(secret_value_as_bool, bool):
                 return secret_value_as_bool
             else:
-                return secret
+                return secret if secret is not None else default_value
     except Exception as e:
         if default_value is not None:
             return default_value
