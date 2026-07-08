@@ -62,7 +62,11 @@ def get_api_base(model: str, optional_params: Union[dict, LiteLLM_Params]) -> Op
     if dynamic_api_base is not None:
         return dynamic_api_base
 
-    stream: bool = getattr(optional_params, "stream", False)
+    stream: bool = (
+        bool(optional_params.get("stream", False))
+        if isinstance(optional_params, dict)
+        else bool(getattr(optional_params, "stream", False))
+    )
 
     if _optional_params.vertex_location is not None and _optional_params.vertex_project is not None:
         from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
