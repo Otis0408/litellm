@@ -6702,7 +6702,7 @@ def shorten_message_to_fit_limit(message, tokens_needed, model: Optional[str], r
 
         half_length = new_length // 2
         left_half = content[:half_length]
-        right_half = content[-half_length:]
+        right_half = content[-half_length:] if half_length > 0 else ""
 
         trimmed_content = left_half + ".." + right_half
         message["content"] = trimmed_content
