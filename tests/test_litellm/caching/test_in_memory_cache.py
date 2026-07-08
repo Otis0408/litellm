@@ -223,3 +223,16 @@ def test_in_memory_cache_prunes_expired_heap_entries_below_capacity():
     assert len(in_memory_cache.cache_dict) == 5
     assert len(in_memory_cache.ttl_dict) == 5
     assert len(in_memory_cache.expiration_heap) == 5
+
+
+def test_async_get_ttl_returns_remaining_seconds_not_absolute_epoch():
+    from litellm.caching.in_memory_cache import InMemoryCache
+
+    cache = InMemoryCache()
+    cache.set_cache(key="k", value="v", ttl=30)
+
+    remaining = asyncio.run(cache.async_get_ttl("k"))
+    assert remaining is not None
+    assert 0 < remaining <= 30
+
+    assert asyncio.run(cache.async_get_ttl("missing")) is None

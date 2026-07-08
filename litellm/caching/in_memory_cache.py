@@ -271,7 +271,13 @@ class InMemoryCache(BaseCache):
         """
         Get the remaining TTL of a key in in-memory cache
         """
-        return self.ttl_dict.get(key, None)
+        expiry = self.ttl_dict.get(key, None)
+        if expiry is None:
+            return None
+        remaining = expiry - time.time()
+        if remaining <= 0:
+            return None
+        return int(remaining)
 
     async def async_get_oldest_n_keys(self, n: int) -> List[str]:
         """
