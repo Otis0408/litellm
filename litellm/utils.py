@@ -2067,7 +2067,7 @@ def create_pretrained_tokenizer(identifier: str, revision="main", auth_token: Op
         tokenizer = Tokenizer.from_pretrained(
             identifier,
             revision=revision,
-            auth_token=auth_token,  # type: ignore
+            token=auth_token,
         )
     except Exception as e:
         verbose_logger.error(f"Error creating pretrained tokenizer: {e}. Defaulting to version without 'auth_token'.")
