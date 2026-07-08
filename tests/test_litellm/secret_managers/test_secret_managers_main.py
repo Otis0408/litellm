@@ -4,7 +4,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from litellm.secret_managers.main import get_secret, normalize_nonempty_secret_str
+import litellm
+from litellm.secret_managers.main import (
+    get_secret,
+    get_secret_bool,
+    get_secret_str,
+    normalize_nonempty_secret_str,
+)
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
@@ -267,3 +273,23 @@ def test_unsupported_oidc_provider():
 )
 def test_normalize_nonempty_secret_str(raw, expected):
     assert normalize_nonempty_secret_str(raw) == expected
+
+
+@pytest.mark.parametrize("raw", ["true", "false", "True", "False", "  true "])
+def test_get_secret_str_preserves_boolean_like_strings(raw, monkeypatch):
+    monkeypatch.setattr(litellm, "secret_manager_client", None, raising=False)
+    monkeypatch.setenv("MY_STRING_SECRET", raw)
+
+    assert get_secret_str("MY_STRING_SECRET") == raw
+    assert get_secret_str("os.environ/MY_STRING_SECRET") == raw
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("true", True), ("false", False), ("True", True), ("False", False), ("  true ", True)],
+)
+def test_get_secret_bool_still_coerces_boolean_like_strings(raw, expected, monkeypatch):
+    monkeypatch.setattr(litellm, "secret_manager_client", None, raising=False)
+    monkeypatch.setenv("MY_BOOL_SECRET", raw)
+
+    assert get_secret_bool("MY_BOOL_SECRET") is expected

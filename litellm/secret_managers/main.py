@@ -114,6 +114,10 @@ def get_secret_str(
     Guarantees response from 'get_secret' is either string or none. Used for fixing linting errors.
     """
     value = get_secret(secret_name=secret_name, default_value=default_value)
+    if isinstance(value, bool):
+        env_name = secret_name.replace("os.environ/", "", 1) if secret_name.startswith("os.environ/") else secret_name
+        raw_value = os.environ.get(env_name)
+        return raw_value if raw_value is not None else None
     if value is not None and not isinstance(value, str):
         return None
 
