@@ -4089,7 +4089,7 @@ def get_user_message_block_or_continue_message(
                 **(user_continue_message or DEFAULT_USER_CONTINUE_MESSAGE)  # type: ignore
             )
         # Create a copy of the message to avoid modifying the original
-        modified_content_block = content_block.copy()
+        modified_content_block = [dict(item) for item in content_block]
 
         for item in modified_content_block:
             # Check if the list is empty

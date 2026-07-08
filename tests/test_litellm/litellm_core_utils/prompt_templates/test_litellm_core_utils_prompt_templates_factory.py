@@ -3085,3 +3085,22 @@ def test_bedrock_converse_messages_pt_document_rejects_url_source():
         _bedrock_converse_messages_pt(
             messages, "anthropic.claude-sonnet-4-6", "bedrock"
         )
+
+
+def test_get_user_message_block_does_not_mutate_original_message():
+    import copy
+
+    from litellm.litellm_core_utils.prompt_templates.factory import (
+        get_user_message_block_or_continue_message,
+    )
+
+    original = {"role": "user", "content": [{"type": "text", "text": "   "}]}
+    snapshot = copy.deepcopy(original)
+
+    result = get_user_message_block_or_continue_message(
+        message=original,
+        user_continue_message={"role": "user", "content": "Please continue."},
+    )
+
+    assert original == snapshot
+    assert result["content"][0]["text"] == "Please continue."
