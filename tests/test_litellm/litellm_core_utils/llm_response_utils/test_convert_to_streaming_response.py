@@ -173,6 +173,39 @@ async def test_async_metadata_propagated_to_every_chunk():
         assert c.created == 1700000000
 
 
+@pytest.mark.asyncio
+async def test_async_delta_preserves_non_enumerated_message_fields():
+    thinking_blocks = [
+        {"type": "thinking", "thinking": "cached thinking", "signature": "sig"}
+    ]
+    annotations = [
+        {
+            "type": "url_citation",
+            "url_citation": {
+                "url": "https://example.com",
+                "title": "Example",
+                "start_index": 0,
+                "end_index": 1,
+            },
+        }
+    ]
+    payload = _async_payload(content="cached reasoning content slices here")
+    payload["choices"][0]["message"]["reasoning_content"] = "cached reasoning"
+    payload["choices"][0]["message"]["thinking_blocks"] = thinking_blocks
+    payload["choices"][0]["message"]["annotations"] = annotations
+    chunks = await _collect_async(payload)
+    assert len(chunks) > 1
+    first_delta = chunks[0].choices[0].delta
+    assert getattr(first_delta, "reasoning_content", None) == "cached reasoning"
+    assert getattr(first_delta, "thinking_blocks", None) == thinking_blocks
+    assert getattr(first_delta, "annotations", None) == annotations
+    for c in chunks[1:]:
+        later_delta = c.choices[0].delta
+        assert getattr(later_delta, "reasoning_content", None) is None
+        assert getattr(later_delta, "thinking_blocks", None) is None
+        assert getattr(later_delta, "annotations", None) is None
+
+
 # ---------- sync generator (parity smoke test) ----------
 
 
