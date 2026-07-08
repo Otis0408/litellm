@@ -146,3 +146,17 @@ def test_exact_cache_key_still_includes_prompt():
         model="gpt-4o-mini", messages=[{"role": "user", "content": "b"}]
     )
     assert key_a != key_b
+
+
+def test_get_cache_s_maxage_zero_rejects_stale_entry():
+    import time
+
+    cache = Cache(type=LiteLLMCacheType.LOCAL)
+    kwargs = dict(model="gpt-4o-mini", messages=[{"role": "user", "content": "hi"}])
+    key = cache.get_cache_key(**kwargs)
+    cache.cache.set_cache(
+        key,
+        {"timestamp": time.time() - 1000, "response": {"choices": [{"message": {"content": "cached"}}]}},
+    )
+    result = cache.get_cache(cache={"s-maxage": 0}, **kwargs)
+    assert result is None

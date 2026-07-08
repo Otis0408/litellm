@@ -587,8 +587,12 @@ class Cache:
             else:
                 cache_key = self.get_cache_key(**kwargs)
             if cache_key is not None:
-                cache_control_args: DynamicCacheControl = kwargs.get("cache", {})
-                max_age = cache_control_args.get("s-maxage") or cache_control_args.get("s-max-age") or float("inf")
+                cache_control_args: DynamicCacheControl = kwargs.get("cache") or {}
+                max_age = cache_control_args.get("s-maxage")
+                if max_age is None:
+                    max_age = cache_control_args.get("s-max-age")
+                if max_age is None:
+                    max_age = float("inf")
                 cache_lookup_kwargs = self._get_safe_cache_lookup_kwargs(kwargs)
                 if dynamic_cache_object is not None:
                     cached_result = dynamic_cache_object.get_cache(cache_key, **cache_lookup_kwargs)
