@@ -3375,3 +3375,23 @@ def test_batch_cost_calculator_cache_creation_falls_back_to_input_rate():
     )
 
     assert prompt_cost == pytest.approx((1000 * 3e-6 + 8000 * 3e-7 + 2000 * 3e-6) / 2)
+
+
+def test_batch_cost_calculator_explicit_batch_rate_discounts_cache_tokens():
+    from litellm.cost_calculator import batch_cost_calculator
+
+    prompt_cost, completion_cost_value = batch_cost_calculator(
+        usage=_batch_cache_usage(),
+        model="gpt-4.1",
+        custom_llm_provider="openai",
+        model_info={  # type: ignore[arg-type]
+            "input_cost_per_token_batches": 1e-6,
+            "input_cost_per_token": 2e-6,
+            "output_cost_per_token_batches": 4e-6,
+            "cache_read_input_token_cost": 5e-7,
+            "cache_creation_input_token_cost": 3e-6,
+        },
+    )
+
+    assert prompt_cost == pytest.approx(1000 * 1e-6 + 8000 * 5e-7 / 2 + 2000 * 3e-6 / 2)
+    assert completion_cost_value == pytest.approx(200 * 4e-6)
