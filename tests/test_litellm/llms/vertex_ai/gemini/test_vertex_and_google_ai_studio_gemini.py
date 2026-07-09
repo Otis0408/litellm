@@ -15,7 +15,7 @@ from litellm.llms.vertex_ai.common_utils import VertexAIError
 from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
     VertexGeminiConfig,
 )
-from litellm.types.llms.vertex_ai import UsageMetadata
+from litellm.types.llms.vertex_ai import FunctionCallingConfig, ToolConfig, UsageMetadata
 from litellm.types.utils import ChoiceLogprobs, Usage
 from litellm.utils import CustomStreamWrapper
 
@@ -5248,3 +5248,27 @@ def test_process_candidates_merges_thought_signatures_and_server_side_tools():
     fields = model_response.choices[-1].message.provider_specific_fields
     assert fields["thought_signatures"] == ["sig-text"]
     assert fields["server_side_tool_invocations"][0]["id"] == "tool-1"
+
+
+def test_map_tool_choice_values_typed_dict_none_does_not_force_empty_tool():
+    v = VertexGeminiConfig()
+
+    assert v.map_tool_choice_values("gemini-2.5-pro", {"type": "none"}) == ToolConfig(
+        functionCallingConfig=FunctionCallingConfig(mode="NONE")
+    )
+    assert v.map_tool_choice_values("gemini-2.5-pro", {"type": "auto"}) == ToolConfig(
+        functionCallingConfig=FunctionCallingConfig(mode="AUTO")
+    )
+    assert v.map_tool_choice_values("gemini-2.5-pro", {"type": "required"}) == ToolConfig(
+        functionCallingConfig=FunctionCallingConfig(mode="ANY")
+    )
+
+    named = v.map_tool_choice_values(
+        "gemini-2.5-pro", {"type": "function", "function": {"name": "get_weather"}}
+    )
+    assert named == ToolConfig(
+        functionCallingConfig=FunctionCallingConfig(mode="ANY", allowed_function_names=["get_weather"])
+    )
+
+    with pytest.raises(litellm.utils.UnsupportedParamsError):
+        v.map_tool_choice_values("gemini-2.5-pro", {"type": "function", "function": {"name": ""}})

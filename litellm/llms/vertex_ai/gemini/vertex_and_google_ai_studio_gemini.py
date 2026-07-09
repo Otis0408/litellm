@@ -352,9 +352,24 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         elif tool_choice == "auto":
             return ToolConfig(functionCallingConfig=FunctionCallingConfig(mode="AUTO"))
         elif isinstance(tool_choice, dict):
-            # only supported for anthropic + mistral models - https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html
+            tool_choice_type = tool_choice.get("type")
+            if tool_choice_type == "none":
+                return ToolConfig(functionCallingConfig=FunctionCallingConfig(mode="NONE"))
+            if tool_choice_type == "auto":
+                return ToolConfig(functionCallingConfig=FunctionCallingConfig(mode="AUTO"))
+            if tool_choice_type == "required":
+                return ToolConfig(functionCallingConfig=FunctionCallingConfig(mode="ANY"))
             name = tool_choice.get("function", {}).get("name", "")
-            return ToolConfig(functionCallingConfig=FunctionCallingConfig(mode="ANY", allowed_function_names=[name]))
+            if name:
+                return ToolConfig(
+                    functionCallingConfig=FunctionCallingConfig(mode="ANY", allowed_function_names=[name])
+                )
+            raise litellm.utils.UnsupportedParamsError(
+                message="VertexAI doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `litellm.drop_params = True.".format(
+                    tool_choice
+                ),
+                status_code=400,
+            )
         else:
             raise litellm.utils.UnsupportedParamsError(
                 message="VertexAI doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `litellm.drop_params = True.".format(
