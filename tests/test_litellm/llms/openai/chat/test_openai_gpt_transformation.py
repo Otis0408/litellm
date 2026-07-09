@@ -651,6 +651,35 @@ class TestGPT5ReasoningEffortPreservation:
         assert optional_params.get("temperature") == 0.5
         assert non_default_params.get("reasoning_effort") == "none"
 
+    def test_reasoning_effort_none_unsupported_raises(self):
+        with pytest.raises(litellm.utils.UnsupportedParamsError):
+            self.config.map_openai_params(
+                non_default_params={"reasoning_effort": "none"},
+                optional_params={},
+                model="gpt-5",
+                drop_params=False,
+            )
+
+    def test_reasoning_effort_none_unsupported_dropped_when_requested(self):
+        optional_params = {}
+        self.config.map_openai_params(
+            non_default_params={"reasoning_effort": "none"},
+            optional_params=optional_params,
+            model="gpt-5",
+            drop_params=True,
+        )
+        assert "reasoning_effort" not in optional_params
+
+    def test_reasoning_effort_none_supported_passed_through(self):
+        optional_params = {}
+        self.config.map_openai_params(
+            non_default_params={"reasoning_effort": "none"},
+            optional_params=optional_params,
+            model="gpt-5.1",
+            drop_params=False,
+        )
+        assert optional_params.get("reasoning_effort") == "none"
+
 
 class TestCacheControlPreservationForCustomEndpoint:
     """
