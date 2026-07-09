@@ -6649,20 +6649,29 @@ class Router:
 
         If no fallback model group is found, returns None
 
+        An entry keyed by "*" acts as a catch-all default, mirroring the generic
+        fallback support in get_fallback_model_group. An exact model_group match
+        always takes priority over the "*" default.
+
         Example:
-            fallbacks = [{"gpt-3.5-turbo": ["gpt-4"]}, {"gpt-4o": ["gpt-3.5-turbo"]}]
+            fallbacks = [{"gpt-3.5-turbo": ["gpt-4"]}, {"*": ["gpt-3.5-turbo"]}]
             model_group = "gpt-3.5-turbo"
             returns: ["gpt-4"]
+
+            model_group = "some-other-model"
+            returns: ["gpt-3.5-turbo"]
         """
         if model_group is None:
             return None
 
-        fallback_model_group: Optional[List[str]] = None
-        for item in fallbacks:  # [{"gpt-3.5-turbo": ["gpt-4"]}]
-            if list(item.keys())[0] == model_group:
-                fallback_model_group = item[model_group]
-                break
-        return fallback_model_group
+        exact_match = next(
+            (item[model_group] for item in fallbacks if list(item.keys())[0] == model_group),
+            None,
+        )
+        if exact_match is not None:
+            return exact_match
+
+        return next((item["*"] for item in fallbacks if list(item.keys())[0] == "*"), None)
 
     def _get_first_default_fallback(self) -> Optional[str]:
         """

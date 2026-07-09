@@ -5304,3 +5304,34 @@ class TestRouterRequestTimeoutPropagation:
             )
             == 60
         )
+
+
+def test_get_fallback_model_group_from_fallbacks_honors_wildcard_default():
+    router = litellm.Router(
+        model_list=[
+            {"model_name": "gpt-3.5-turbo", "litellm_params": {"model": "gpt-3.5-turbo"}},
+        ],
+    )
+
+    wildcard_fallbacks = [{"*": ["gpt-4o-mini"]}]
+
+    assert router._get_fallback_model_group_from_fallbacks(
+        fallbacks=wildcard_fallbacks, model_group="some-unlisted-model"
+    ) == ["gpt-4o-mini"]
+
+    mixed_fallbacks = [{"gpt-3.5-turbo": ["gpt-4"]}, {"*": ["gpt-4o-mini"]}]
+
+    assert router._get_fallback_model_group_from_fallbacks(
+        fallbacks=mixed_fallbacks, model_group="gpt-3.5-turbo"
+    ) == ["gpt-4"]
+
+    assert router._get_fallback_model_group_from_fallbacks(
+        fallbacks=mixed_fallbacks, model_group="another-model"
+    ) == ["gpt-4o-mini"]
+
+    assert (
+        router._get_fallback_model_group_from_fallbacks(
+            fallbacks=[{"gpt-3.5-turbo": ["gpt-4"]}], model_group="another-model"
+        )
+        is None
+    )
