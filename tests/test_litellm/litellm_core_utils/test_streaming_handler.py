@@ -1226,6 +1226,65 @@ def test_optional_combine_thinking_block_with_none_content(
     assert not hasattr(final_response.choices[0].delta, "reasoning_content")
 
 
+def test_optional_combine_thinking_block_preserves_content_alongside_reasoning(
+    initialized_custom_stream_wrapper: CustomStreamWrapper,
+):
+    initialized_custom_stream_wrapper.merge_reasoning_content_in_choices = True
+    initialized_custom_stream_wrapper.sent_first_thinking_block = False
+    initialized_custom_stream_wrapper.sent_last_thinking_block = False
+
+    chunks = [
+        {
+            "id": "chunk1",
+            "object": "chat.completion.chunk",
+            "created": 1741037890,
+            "model": "deepseek-reasoner",
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": None, "reasoning_content": "Let me think"},
+                    "finish_reason": None,
+                }
+            ],
+        },
+        {
+            "id": "chunk2",
+            "object": "chat.completion.chunk",
+            "created": 1741037891,
+            "model": "deepseek-reasoner",
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": "VISIBLE_ANSWER", "reasoning_content": " more"},
+                    "finish_reason": None,
+                }
+            ],
+        },
+        {
+            "id": "chunk3",
+            "object": "chat.completion.chunk",
+            "created": 1741037892,
+            "model": "deepseek-reasoner",
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": " tail", "reasoning_content": None},
+                    "finish_reason": None,
+                }
+            ],
+        },
+    ]
+
+    assembled = ""
+    for chunk in chunks:
+        response = ModelResponseStream(**chunk)
+        initialized_custom_stream_wrapper._optional_combine_thinking_block_in_choices(response)
+        assembled += response.choices[0].delta.content or ""
+
+    assert "VISIBLE_ANSWER" in assembled
+    assert assembled == "<think>Let me think more</think>VISIBLE_ANSWER tail"
+
+
 def test_has_special_delta_content(
     initialized_custom_stream_wrapper: CustomStreamWrapper,
 ):

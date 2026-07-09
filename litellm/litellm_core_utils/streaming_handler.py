@@ -1028,7 +1028,12 @@ class CustomStreamWrapper:
                     and hasattr(model_response.choices[0].delta, "reasoning_content")
                     and model_response.choices[0].delta.reasoning_content
                 ):
-                    model_response.choices[0].delta.content = reasoning_content
+                    existing_content = model_response.choices[0].delta.content
+                    if existing_content:
+                        model_response.choices[0].delta.content = reasoning_content + "</think>" + existing_content
+                        self.sent_last_thinking_block = True
+                    else:
+                        model_response.choices[0].delta.content = reasoning_content
             elif (
                 self.sent_first_thinking_block is True
                 and not self.sent_last_thinking_block
