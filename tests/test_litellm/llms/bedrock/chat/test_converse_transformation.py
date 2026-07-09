@@ -5671,3 +5671,48 @@ async def test_grounding_source_and_query_rendered_as_text():
     user_content = result[0]["content"]
     assert {"text": "Tokyo is the capital of Japan."} in user_content
     assert {"text": "What is the capital of Japan?"} in user_content
+
+
+def test_map_openai_params_stop_filters_empty_sequences():
+    config = AmazonConverseConfig()
+    model = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+    mixed = config.map_openai_params(
+        non_default_params={"stop": ["", "END"]},
+        optional_params={},
+        model=model,
+        drop_params=False,
+    )
+    assert mixed["stopSequences"] == ["END"]
+
+    only_empty = config.map_openai_params(
+        non_default_params={"stop": [""]},
+        optional_params={},
+        model=model,
+        drop_params=False,
+    )
+    assert "stopSequences" not in only_empty
+
+    interleaved = config.map_openai_params(
+        non_default_params={"stop": ["A", "", "B"]},
+        optional_params={},
+        model=model,
+        drop_params=False,
+    )
+    assert interleaved["stopSequences"] == ["A", "B"]
+
+    scalar = config.map_openai_params(
+        non_default_params={"stop": "END"},
+        optional_params={},
+        model=model,
+        drop_params=False,
+    )
+    assert scalar["stopSequences"] == ["END"]
+
+    empty_scalar = config.map_openai_params(
+        non_default_params={"stop": ""},
+        optional_params={},
+        model=model,
+        drop_params=False,
+    )
+    assert "stopSequences" not in empty_scalar

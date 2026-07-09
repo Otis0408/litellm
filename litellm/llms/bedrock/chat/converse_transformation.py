@@ -863,11 +863,10 @@ class AmazonConverseConfig(BaseConfig):
             if param == "stream":
                 optional_params["stream"] = value
             if param == "stop":
-                if isinstance(value, str):
-                    if len(value) == 0:  # converse raises error for empty strings
-                        continue
-                    value = [value]
-                optional_params["stopSequences"] = value
+                stop_list = [value] if isinstance(value, str) else value
+                stop_sequences = [s for s in stop_list if isinstance(s, str) and len(s) > 0]
+                if stop_sequences:
+                    optional_params["stopSequences"] = stop_sequences
             if param == "temperature" or param == "top_p":
                 AnthropicConfig._apply_sampling_param(
                     optional_params=optional_params,
