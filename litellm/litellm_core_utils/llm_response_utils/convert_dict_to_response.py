@@ -604,8 +604,11 @@ def convert_to_model_response_object(
         if has_meaningful_error:
             error_args = {"status_code": 422, "message": "Error in response object"}
             if isinstance(error_obj, dict):
-                if "code" in error_obj:
-                    error_args["status_code"] = error_obj["code"]
+                error_code = error_obj.get("code")
+                if isinstance(error_code, int) and not isinstance(error_code, bool):
+                    error_args["status_code"] = error_code
+                elif isinstance(error_code, str) and error_code.isdigit():
+                    error_args["status_code"] = int(error_code)
                 if "message" in error_obj:
                     if isinstance(error_obj["message"], dict):
                         message_str = json.dumps(error_obj["message"])
