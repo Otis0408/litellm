@@ -5733,3 +5733,16 @@ def test_top_k_forwarded_at_transform_on_models_that_accept_it():
     )
 
     assert result["top_k"] == 40
+
+
+def test_map_stop_sequences_with_non_string_element_does_not_crash():
+    config = AnthropicConfig()
+
+    optional_params = config.map_openai_params(
+        non_default_params={"stop": ["ok", 5]},
+        optional_params={},
+        model="claude-3-5-sonnet",
+        drop_params=True,
+    )
+
+    assert "ok" in optional_params["stop_sequences"]

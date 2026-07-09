@@ -1146,9 +1146,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         elif isinstance(stop, list):
             new_v = []
             for v in stop:
-                if (
-                    v.isspace() and litellm.drop_params is True
-                ):  # anthropic doesn't allow whitespace characters as stop-sequences
+                if isinstance(v, str) and v.isspace() and litellm.drop_params is True:
                     continue
                 new_v.append(v)
             if len(new_v) > 0:
