@@ -5248,3 +5248,16 @@ def test_process_candidates_merges_thought_signatures_and_server_side_tools():
     fields = model_response.choices[-1].message.provider_specific_fields
     assert fields["thought_signatures"] == ["sig-text"]
     assert fields["server_side_tool_invocations"][0]["id"] == "tool-1"
+
+
+@pytest.mark.parametrize("model", ["gemini-2.5-pro", "gemini-3-pro-preview"])
+def test_map_openai_params_invalid_reasoning_effort_raises_bad_request(model):
+    with pytest.raises(litellm.exceptions.BadRequestError) as exc_info:
+        VertexGeminiConfig().map_openai_params(
+            non_default_params={"reasoning_effort": "xhigh"},
+            optional_params={},
+            model=model,
+            drop_params=False,
+        )
+    assert "xhigh" in str(exc_info.value)
+    assert exc_info.value.llm_provider == "gemini"

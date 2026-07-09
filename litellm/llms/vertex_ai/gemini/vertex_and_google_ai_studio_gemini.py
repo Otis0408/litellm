@@ -862,7 +862,14 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
                 "includeThoughts": False,
             }
         else:
-            raise ValueError(f"Invalid reasoning effort: {reasoning_effort}")
+            raise litellm.exceptions.BadRequestError(
+                message=(
+                    f"Invalid reasoning_effort: {reasoning_effort!r}. "
+                    f"Must be one of: 'minimal', 'low', 'medium', 'high', 'disable', 'none'"
+                ),
+                model=model or "",
+                llm_provider="gemini",
+            )
 
     @staticmethod
     def _map_reasoning_effort_to_thinking_level(
@@ -910,7 +917,14 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             else:
                 return {"thinkingLevel": "low", "includeThoughts": False}
         else:
-            raise ValueError(f"Invalid reasoning effort: {reasoning_effort}")
+            raise litellm.exceptions.BadRequestError(
+                message=(
+                    f"Invalid reasoning_effort: {reasoning_effort!r}. "
+                    f"Must be one of: 'minimal', 'low', 'medium', 'high', 'disable', 'none'"
+                ),
+                model=model or "",
+                llm_provider="gemini",
+            )
 
     @staticmethod
     def _is_thinking_budget_zero(thinking_budget: Optional[int]) -> bool:
