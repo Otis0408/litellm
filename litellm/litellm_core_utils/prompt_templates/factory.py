@@ -3018,13 +3018,27 @@ def convert_to_cohere_tool_invoke(tool_calls: list) -> List[ToolCallObject]:
     cohere_tool_invoke: List[ToolCallObject] = [
         {
             "name": get_attribute_or_key(get_attribute_or_key(tool, "function"), "name"),
-            "parameters": json.loads(get_attribute_or_key(get_attribute_or_key(tool, "function"), "arguments")),
+            "parameters": _parse_cohere_tool_invoke_arguments(
+                get_attribute_or_key(get_attribute_or_key(tool, "function"), "arguments")
+            ),
         }
         for tool in tool_calls
         if get_attribute_or_key(tool, "type") == "function"
     ]
 
     return cohere_tool_invoke
+
+
+def _parse_cohere_tool_invoke_arguments(arguments: Any) -> dict:
+    if isinstance(arguments, dict):
+        return arguments
+    if not isinstance(arguments, str) or len(arguments.strip()) == 0:
+        return {}
+    try:
+        parsed = json.loads(arguments)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def cohere_messages_pt_v2(
