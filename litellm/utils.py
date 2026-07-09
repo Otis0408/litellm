@@ -2829,6 +2829,7 @@ def get_optional_params_transcription(
     passed_params = locals()
 
     passed_params.pop("OPENAI_TRANSCRIPTION_PARAMS")
+    passed_params.pop("model", None)
     custom_llm_provider = passed_params.pop("custom_llm_provider")
     drop_params = passed_params.pop("drop_params")
     special_params = passed_params.pop("kwargs")

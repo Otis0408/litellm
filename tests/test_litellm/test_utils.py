@@ -4706,3 +4706,30 @@ class TestValidateEnvironmentTencent:
         assert "TENCENT_API_KEY" in result["missing_keys"]
 
 
+
+
+class TestGetOptionalParamsTranscriptionModelLeak:
+    def test_model_not_forwarded_as_body_param_for_provider_config(self):
+        from litellm.utils import get_optional_params_transcription
+
+        optional_params = get_optional_params_transcription(
+            model="nova-2",
+            custom_llm_provider="deepgram",
+            language="en",
+        )
+
+        assert "model" not in optional_params
+        assert optional_params == {"language": "en"}
+
+    def test_model_not_leaked_into_extra_body_for_openai(self):
+        from litellm.utils import get_optional_params_transcription
+
+        optional_params = get_optional_params_transcription(
+            model="whisper-1",
+            custom_llm_provider="openai",
+            language="en",
+            temperature=0.2,
+        )
+
+        assert "model" not in optional_params
+        assert "model" not in optional_params.get("extra_body", {})
